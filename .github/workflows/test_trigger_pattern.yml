@@ -1,0 +1,36 @@
+name: test_trigger_pattern
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+jobs:
+  dev_deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref_name == 'develop'
+    steps:
+      - name: DEV deploy triggered
+        run: |
+          echo "==================="
+          echo "DEV DEPLOY TRIGGERED"
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "==================="
+
+  prd_deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    steps:
+      - name: PRD deploy triggered
+        run: |
+          echo "==================="
+          echo "PRD DEPLOY TRIGGERED"
+          echo "Event: ${{ github.event_name }}"
+          echo "Merged: ${{ github.event.pull_request.merged }}"
+          echo "PR base: ${{ github.event.pull_request.base.ref }}"
+          echo "PR number: ${{ github.event.pull_request.number }}"
+          echo "==================="
