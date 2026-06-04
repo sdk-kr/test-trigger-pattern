@@ -4,18 +4,17 @@
 2026-06-04 (UTC 04:52 ~ 04:58)
 
 ## 검증 목적
-JIRA **BDP-181592 (003번 취약점)** 조치 관련,
+사내 소스코드 보안 점검 조치 관련 — GitHub Actions 배포 워크플로우가
+`pull_request` 트리거로 동작하여 **리뷰 전 코드가 배포될 수 있는 취약점**을 해소하기 위해,
 `develop`은 **push 트리거** / `master`는 **pull_request(closed) 트리거**로 분리하는 패턴이
 의도대로 동작하는지 검증.
 
-- DEV 배포: develop 브랜치에 push 발생 시에만
+- DEV 배포: develop 브랜치에 push(머지 포함) 발생 시에만
 - PRD 배포: master를 base로 한 PR이 **merge되어 close**될 때만
 
 ## 테스트 환경
-- 레포: `sdk-kr/test-trigger-pattern` (private, 보존됨)
-- 계정: sdk-kr / gh CLI 2.86.0
-- 비고: 인증 토큰에 `workflow` scope가 없어 HTTPS로는 워크플로우 파일 push가 거부됨
-  → **git remote를 SSH로 전환하여 우회** (SSH 키는 OAuth scope 제한 비적용)
+- 레포: `sdk-kr/test-trigger-pattern` (검증용 별도 레포)
+- gh CLI 2.86.0
 
 ## 테스트 yml
 ```yaml
@@ -71,14 +70,20 @@ jobs:
 
 **✅ 성공 — master를 pull_request(closed + merged) 조건으로 두는 분리 방식이 정상 동작한다.**
 
-검증의 핵심인 **시나리오 5**(develop→master PR 머지)에서 `prd_deploy`가 정확히 1회 실행되었고,
-머지가 아닌 단순 close(시나리오 6)에서는 실행되지 않았다. develop push 트리거(시나리오 1·3)와
+검증의 핵심인 **시나리오 5**(develop→master PR 머지)에서, 아래 조건으로 `prd_deploy`가
+정확히 1회 실행되었다:
+
+```yaml
+if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+```
+
+머지가 아닌 단순 close(시나리오 6)에서는 실행되지 않았고, develop push 트리거(시나리오 1·3)와
 master PR 트리거(시나리오 5)가 서로 간섭 없이 분리되어 동작함을 확인.
 
 - DEV 배포는 develop push에서만 (시나리오 1·3 ✓, 그 외 skip)
 - PRD 배포는 master PR이 **머지될 때만** (시나리오 5 ✓, opened/close-without-merge에서는 미실행)
 
-→ BDP-181592 조치로 제안된 트리거 분리 패턴을 **원복/적용해도 안전**하다.
+→ 제안된 "develop=push / master=pull_request(merged)" 트리거 분리 패턴을 **적용/원복해도 안전**하다.
 
 ## 부록: 주요 run 로그
 
