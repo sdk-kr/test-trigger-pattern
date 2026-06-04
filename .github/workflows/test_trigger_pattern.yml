@@ -3,9 +3,6 @@ name: test_trigger_pattern
 on:
   push:
     branches: [develop]
-  pull_request:
-    types: [closed]
-    branches: [master]
 
 jobs:
   dev_deploy:
@@ -14,12 +11,9 @@ jobs:
     steps:
       - name: DEV deploy triggered
         run: |
-          echo "==================="
-          echo "DEV DEPLOY TRIGGERED"
+          echo "DEV DEPLOY TRIGGERED (pull_request 트리거 제거 버전)"
           echo "Event: ${{ github.event_name }}"
           echo "Ref: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo "==================="
 
   prd_deploy:
     runs-on: ubuntu-latest
@@ -27,10 +21,5 @@ jobs:
     steps:
       - name: PRD deploy triggered
         run: |
-          echo "==================="
           echo "PRD DEPLOY TRIGGERED"
           echo "Event: ${{ github.event_name }}"
-          echo "Merged: ${{ github.event.pull_request.merged }}"
-          echo "PR base: ${{ github.event.pull_request.base.ref }}"
-          echo "PR number: ${{ github.event.pull_request.number }}"
-          echo "==================="
